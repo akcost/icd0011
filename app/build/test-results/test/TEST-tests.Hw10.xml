@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="tests.Hw10" tests="5" skipped="0" failures="0" errors="0" timestamp="2023-07-09T19:01:57" hostname="Aksels-MacBook-Pro.local" time="0.958">
+  <properties/>
+  <testcase name="canAccessProtectedResourceWhenLoggedIn" classname="tests.Hw10" time="0.528"/>
+  <testcase name="versionInfoIsNotProtected" classname="tests.Hw10" time="0.015"/>
+  <testcase name="canNotAccessProtectedResourceWithoutLoggingIn" classname="tests.Hw10" time="0.013"/>
+  <testcase name="adminCanAccessAllUsersInfo" classname="tests.Hw10" time="0.209"/>
+  <testcase name="userCanAccessOnlyOwnInfo" classname="tests.Hw10" time="0.193"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
