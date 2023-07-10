@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="tests.Hw10" tests="5" skipped="0" failures="0" errors="0" timestamp="2023-07-09T19:01:57" hostname="Aksels-MacBook-Pro.local" time="0.958">
+<testsuite name="tests.Hw10" tests="9" skipped="0" failures="0" errors="0" timestamp="2023-07-10T14:00:39" hostname="Aksels-MacBook-Pro.local" time="2.466">
   <properties/>
-  <testcase name="canAccessProtectedResourceWhenLoggedIn" classname="tests.Hw10" time="0.528"/>
-  <testcase name="versionInfoIsNotProtected" classname="tests.Hw10" time="0.015"/>
-  <testcase name="canNotAccessProtectedResourceWithoutLoggingIn" classname="tests.Hw10" time="0.013"/>
-  <testcase name="adminCanAccessAllUsersInfo" classname="tests.Hw10" time="0.209"/>
-  <testcase name="userCanAccessOnlyOwnInfo" classname="tests.Hw10" time="0.193"/>
+  <testcase name="userAddsOrderWithOrderRows" classname="tests.Hw10" time="1.101"/>
+  <testcase name="canAccessProtectedResourceWhenLoggedIn" classname="tests.Hw10" time="0.169"/>
+  <testcase name="versionInfoIsNotProtected" classname="tests.Hw10" time="0.013"/>
+  <testcase name="canNotAccessProtectedResourceWithoutLoggingIn" classname="tests.Hw10" time="0.012"/>
+  <testcase name="adminAddsOrderWithOrderRows" classname="tests.Hw10" time="0.289"/>
+  <testcase name="adminCanAccessAllUsersInfo" classname="tests.Hw10" time="0.223"/>
+  <testcase name="userCanAccessOnlyOwnInfo" classname="tests.Hw10" time="0.173"/>
+  <testcase name="adminCanDeleteOrderById" classname="tests.Hw10" time="0.289"/>
+  <testcase name="userCantDeleteOrderById" classname="tests.Hw10" time="0.196"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

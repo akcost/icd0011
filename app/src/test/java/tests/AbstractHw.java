@@ -62,7 +62,7 @@ public abstract class AbstractHw {
     }
 
     protected void assertDoesNotContainString(List<FileReader.File> files,
-                                            String targetString) {
+                                              String targetString) {
 
         for (FileReader.File file : files) {
             String message = MessageFormat.format(
@@ -90,7 +90,7 @@ public abstract class AbstractHw {
     private static Client getClient() {
         try {
             SSLContext sslcontext = SSLContext.getInstance("TLS");
-            sslcontext.init(null, new TrustManager[] {new NopX509TrustManager()}, new SecureRandom());
+            sslcontext.init(null, new TrustManager[]{new NopX509TrustManager()}, new SecureRandom());
             return ClientBuilder.newBuilder()
                     .register(new LoggingFilter(isLoggingEnabled))
                     .register(JacksonConfig.class)
@@ -106,10 +106,20 @@ public abstract class AbstractHw {
     }
 
     protected List<Order> getList(String path, Parameter... parameters) {
-        return getList(path, new GenericType<List<Order>>() {}, parameters);
+        return getList(path, new GenericType<List<Order>>() {
+        }, parameters);
+    }
+
+    protected List<Order> getListAuth(String path, String jwtToken, Parameter... parameters) {
+        return getListAuth(path, jwtToken, new GenericType<List<Order>>() {
+        }, parameters);
     }
 
     protected Order getOne(String path, Parameter... parameters) {
+        return getOne(path, Order.class, parameters);
+    }
+
+    protected Order getOneAuth(String path, String jwtToken, Parameter... parameters) {
         return getOne(path, Order.class, parameters);
     }
 
@@ -117,7 +127,7 @@ public abstract class AbstractHw {
         return getOne(path, String.class);
     }
 
-    protected <T> T getOne(String path, Class<T> clazz, Parameter ... parameters) {
+    protected <T> T getOne(String path, Class<T> clazz, Parameter... parameters) {
         WebTarget target = getTarget().path(path);
 
         for (Parameter p : parameters) {
@@ -129,23 +139,47 @@ public abstract class AbstractHw {
                 .get(clazz);
     }
 
+    protected <T> T getOneAuth(String path, String jwtToken, Class<T> clazz, Parameter... parameters) {
+        WebTarget target = getTarget().path(path);
+
+        for (Parameter p : parameters) {
+            target = target.queryParam(p.getKey(), p.getValue());
+        }
+
+        // Add the JWT token to the request headers
+        Invocation.Builder request = target
+                .request(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + jwtToken);
+
+        return request.get(clazz);
+    }
+
+
     protected Parameter param(String key, Object value) {
         return new Parameter(key, String.valueOf(value));
     }
 
     protected Result<Order> postOrder(String path, Order data) {
-        return postCommon(path, data, new GenericType<Order>() {});
+        return postCommon(path, data, new GenericType<Order>() {
+        });
+    }
+
+    protected Result<Order> postOrderAuth(String path, Order data, String jwtToken) {
+        return postCommonAuth(path, data, new GenericType<Order>() {
+        }, jwtToken);
     }
 
     protected Result<Order> postOrderFromJsonString(String path, String data) {
-        return postCommon(path, data, new GenericType<Order>() {});
+        return postCommon(path, data, new GenericType<Order>() {
+        });
     }
 
     protected Result<Map<String, Object>> postMap(
             String path,
             Map<String, Object> data) {
 
-        return postCommon(path, data, new GenericType<Map<String, Object>>() {});
+        return postCommon(path, data, new GenericType<Map<String, Object>>() {
+        });
     }
 
     protected boolean sendRequest(String path) {
@@ -158,7 +192,7 @@ public abstract class AbstractHw {
         return Response.Status.OK.getStatusCode() == response.getStatus();
     }
 
-    protected void delete(String path, Parameter ... parameters) {
+    protected void delete(String path, Parameter... parameters) {
         WebTarget target = getTarget().path(path);
 
         for (Parameter p : parameters) {
@@ -168,7 +202,23 @@ public abstract class AbstractHw {
         closeQuietly(target.request().delete());
     }
 
-    protected Order createOrder(String number, String ... items) {
+    protected void deleteAuth(String path, String jwtToken, Parameter... parameters) {
+        WebTarget target = getTarget().path(path);
+
+        for (Parameter p : parameters) {
+            target = target.queryParam(p.getKey(), p.getValue());
+        }
+
+        // Add the JWT token to the request headers
+        Invocation.Builder request = target
+                .request()
+                .header("Authorization", "Bearer " + jwtToken);
+
+        closeQuietly(request.delete());
+    }
+
+
+    protected Order createOrder(String number, String... items) {
         Order order = new Order(number);
         for (String item : items) {
             order.add(new OrderRow(item, 1, 100));
@@ -176,14 +226,20 @@ public abstract class AbstractHw {
         return order;
     }
 
-    protected String postOrder(String url, String number, String ... items) {
+    protected String postOrder(String url, String number, String... items) {
         return postOrder(url, createOrder(number, items))
                 .getValue()
                 .getId();
     }
 
+    protected String postOrderAuth(String url, String jwtToken, String number, String... items) {
+        return postOrderAuth(url, createOrder(number, items), jwtToken)
+                .getValue()
+                .getId();
+    }
+
     protected void assertContainsItems(
-            List<Order> orderList, String id, String ... itemName) {
+            List<Order> orderList, String id, String... itemName) {
 
         List<String> items = orderList.stream()
                 .filter(o -> o.getId().equals(id))
@@ -194,7 +250,7 @@ public abstract class AbstractHw {
         assertThat(items, contains(itemName));
     }
 
-    protected void assertHasIds(List<Order> orderList, String ... ids) {
+    protected void assertHasIds(List<Order> orderList, String... ids) {
         List<String> returnedOrderIds = orderList.stream()
                 .map(Order::getId)
                 .collect(Collectors.toList());
@@ -230,6 +286,38 @@ public abstract class AbstractHw {
         }
     }
 
+    //Post request with JWT token
+    protected <T> Result<T> postCommonAuth(String path, Object data, GenericType<T> resultType, String jwtToken) {
+        Invocation.Builder request = getTarget()
+                .path(path)
+                .request(MediaType.APPLICATION_JSON);
+
+        // Add the JWT token to the request headers
+        request.header("Authorization", "Bearer " + jwtToken);
+
+        try (Response response = request.post(Entity.entity(data, MediaType.APPLICATION_JSON))) {
+            return readResult(response, resultType);
+        }
+    }
+
+    private <T> List<T> getListAuth(String path, String jwtToken,
+                                    GenericType<List<T>> type,
+                                    Parameter... parameters) {
+
+        WebTarget target = getTarget().path(path);
+
+        for (Parameter p : parameters) {
+            target = target.queryParam(p.getKey(), p.getValue());
+        }
+
+        // Add the JWT token to the request headers
+        Invocation.Builder request = target.request(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + jwtToken);
+
+        return request.get(type);
+    }
+
+
     private <T> List<T> getList(String path,
                                 GenericType<List<T>> type,
                                 Parameter... parameters) {
@@ -252,7 +340,8 @@ public abstract class AbstractHw {
 
         try {
             closeable.close();
-        } catch (Exception ignore) {}
+        } catch (Exception ignore) {
+        }
     }
 
 }

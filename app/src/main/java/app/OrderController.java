@@ -4,6 +4,7 @@ import dao.OrderDao;
 import jakarta.validation.Valid;
 import model.Order;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -34,4 +35,12 @@ public class OrderController {
     public Order save(@RequestBody @Valid Order order) {
         return dao.save(order);
     }
+
+    @PreAuthorize("authentication.name == 'admin'")
+    @DeleteMapping("/api/orders/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteOrderById(@PathVariable Long id) {
+        dao.deleteOrderById(id);
+    }
+
 }

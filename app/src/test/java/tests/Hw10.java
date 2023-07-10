@@ -9,10 +9,16 @@ import org.glassfish.jersey.client.ClientProperties;
 import org.hamcrest.core.AnyOf;
 import org.junit.Test;
 import tests.model.LoginData;
+import tests.model.Order;
+import tests.model.Result;
 import util.RequestResult;
+
+import java.util.List;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.core.Is.is;
 
 
@@ -55,12 +61,89 @@ public class Hw10 extends AbstractHw {
     }
 
     @Test
+    public void adminAddsOrderWithOrderRows() {
+
+        String token = loginWith("admin", "admin");
+
+        String id1 = postOrderAuth("api/orders", token, "A123", "CPU", "Motherboard");
+        String id2 = postOrderAuth("api/orders", token, "A456", "Mouse");
+        String id3 = postOrderAuth("api/orders", token, "A789", "Monitor", "Printer");
+
+        List<Order> orderList = getListAuth("api/orders", token);
+
+        assertHasIds(orderList, id1, id2, id3);
+
+        assertContainsItems(orderList, id1, "CPU", "Motherboard");
+        assertContainsItems(orderList, id2, "Mouse");
+        assertContainsItems(orderList, id3, "Monitor", "Printer");
+    }
+
+    @Test
+    public void userAddsOrderWithOrderRows() {
+
+        String token = loginWith("user", "user");
+
+        String id1 = postOrderAuth("api/orders", token, "C123", "CPU", "Motherboard");
+        String id2 = postOrderAuth("api/orders", token, "C456", "Mouse");
+        String id3 = postOrderAuth("api/orders", token, "C789", "Monitor", "Printer");
+
+        List<Order> orderList = getListAuth("api/orders", token);
+
+        assertHasIds(orderList, id1, id2, id3);
+
+        assertContainsItems(orderList, id1, "CPU", "Motherboard");
+        assertContainsItems(orderList, id2, "Mouse");
+        assertContainsItems(orderList, id3, "Monitor", "Printer");
+    }
+
+    @Test
     public void adminCanAccessAllUsersInfo() {
         String token = loginWith("admin", "admin");
 
         assertThat(getRequest("api/users", token).getStatusCode(), is(200));
         assertThat(getRequest("api/users/user", token).getStatusCode(), is(200));
     }
+
+    @Test
+    public void adminCanDeleteOrderById() {
+
+        String token = loginWith("admin", "admin");
+
+        Result<Order> result = postOrderAuth("api/orders", new Order("A1"), token);
+
+        String idOfPostedOrder = result.getValue().getId();
+
+        deleteAuth("api/orders/"+idOfPostedOrder, token);
+
+        List<Order> allOrders = getListAuth("api/orders", token);
+
+        List<String> allIds = allOrders.stream()
+                .map(Order::getId)
+                .toList();
+
+        assertThat(allIds, not(hasItems(idOfPostedOrder)));
+    }
+
+    @Test
+    public void userCantDeleteOrderById() {
+        String token = loginWith("user", "user");
+
+        Result<Order> result = postOrderAuth("api/orders", new Order("C1"), token);
+
+        String idOfPostedOrder = result.getValue().getId();
+
+        deleteAuth("api/orders/"+idOfPostedOrder, token);
+
+        List<Order> allOrders = getListAuth("api/orders", token);
+
+        List<String> allIds = allOrders.stream()
+                .map(Order::getId)
+                .toList();
+
+        assertThat(allIds, hasItems(idOfPostedOrder));
+    }
+
+
 
     private String loginWith(String userName, String password) {
         RequestResult requestResult = postJson("api/login",
